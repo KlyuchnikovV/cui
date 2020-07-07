@@ -23,6 +23,8 @@ func (g graphicsMode) addColorOffset(c Color) string {
 }
 
 const (
+	setGraphics string = "\x1b[%sm"
+
 	ResetGraphics          graphicsMode = 0
 	Bold                   graphicsMode = 1 // increase brightness
 	Faded                  graphicsMode = 2 // lower brightness

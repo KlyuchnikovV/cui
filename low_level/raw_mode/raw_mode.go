@@ -1,4 +1,4 @@
-package low_level
+package raw_mode
 
 // #include "./raw_mode.h"
 import "C"
