@@ -7,19 +7,15 @@ func (r renderRequest) GetMessage() interface{} {
 }
 
 const (
-	// esc               string = "\x1b"
-	setGraphics string = "\x1b[%sm" // 0 params - reset to normal
-
-	// cursorPosition    string = "\x1b[6n"
-	// curPosFormat      string = "\x1b[([0-9]+);([0-9]+)R" // x (line);y(column)
-
-	setCursorPosition string = "\x1b[%d;%dH"
-	scrollUp          string = "\x1b[%dS"
-	scrollDown        string = "\x1b[%dT"
-	saveCurPos        string = "\x1b[s"
-	restoreCurPos     string = "\x1b[u"
-	hideCursor        string = "\x1b[?25l"
-	showCursor        string = "\x1b[?25h"
+	getCursorPosition    string = "\x1b[6n"
+	cursorPositionFormat string = "\\x1b\\[([0-9]+);([0-9]+)R" // x (line);y(column)
+	setCursorPosition    string = "\x1b[%d;%dH"
+	scrollUp             string = "\x1b[%dS"
+	scrollDown           string = "\x1b[%dT"
+	saveCurPos           string = "\x1b[s"
+	restoreCurPos        string = "\x1b[u"
+	hideCursor           string = "\x1b[?25l"
+	showCursor           string = "\x1b[?25h"
 )
 
 type CursorMovement interface {
