@@ -96,8 +96,12 @@ func (c *ConsoleUI) onRenderRequest(data chan_utils.Message) {
 }
 
 func (c *ConsoleUI) Write(p []byte) {
+<<<<<<< HEAD
 	_, err := c.outStream.Write(p)
 	if err != nil {
+=======
+	if _, err := c.outStream.Write(p); err != nil {
+>>>>>>> 40201043a65c66da7bd3483c11a30f9bbb66b003
 		log.Panic(err)
 	}
 }
