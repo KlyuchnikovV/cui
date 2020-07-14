@@ -36,7 +36,7 @@ func (g *Graphics) SetGraphics(modes ...GraphicsMode) {
 	for i, mode := range modes {
 		result[i] = mode.getGraphicsModeString()
 	}
-	g.out.Print(fmt.Sprintf(setGraphics, strings.Join(result, ";")))
+	g.Print(fmt.Sprintf(setGraphics, strings.Join(result, ";")))
 }
 
 func (g *Graphics) SetForegroundColor(color Color) {

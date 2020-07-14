@@ -8,9 +8,15 @@ import (
 
 type RenderRequest []byte
 
-func (r *RenderRequest) GetMessage() chan_utils.Message {
+func (r RenderRequest) GetMessage() chan_utils.Message {
 	return r
 }
+
+func (r RenderRequest) String() string {
+	return string(r)
+}
+
+func (r RenderRequest) Signal() {}
 
 type Widget interface {
 	Render(RenderRequest)
@@ -19,6 +25,7 @@ type Widget interface {
 type ConsoleStream interface {
 	getConsoleStream() ConsoleStream
 	Print(string) error
+	Write([]byte) (int, error)
 }
 
 type consoleStream struct {
@@ -30,6 +37,10 @@ func NewConsoleStream() *consoleStream {
 		out: os.Stdout,
 	}
 	return &result
+}
+
+func (c *consoleStream) Write(p []byte) (int, error) {
+	return c.out.Write(p)
 }
 
 func (c *consoleStream) Print(message string) error {

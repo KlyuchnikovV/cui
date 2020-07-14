@@ -1,6 +1,7 @@
 package cui
 
 import (
+	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/graphics"
 	"context"
 	"fmt"
@@ -21,27 +22,14 @@ type ConsoleUI struct {
 	server.Server
 }
 
-func New(ctx context.Context, enableRaw, debug bool) (*ConsoleUI, error) {
-	out, err := os.OpenFile("/dev/tty", os.O_RDWR, os.ModeAppend)
-	if err != nil {
-		log.Printf("INFO: %s\n", err.Error())
-		if debug {
-			out = os.Stdout
-		} else {
-			return nil, err
-		}
-	}
-
+func New(ctx context.Context, enableRaw bool, widgets ...types.Widget) (*ConsoleUI, error) {
 	if enableRaw {
 		log.Print("entering raw")
 		raw_mode.EnableRawMode()
 	}
 
 	return &ConsoleUI{
-		ctx:                 ctx,
-		Graphics:            graphics.New()
-		renderChan:          make(chan chan_utils.Message, 10),
-		cursorPositionRegex: r,
+		Server: server.New(ctx, widgets...)
 	}, nil
 }
 

@@ -16,8 +16,8 @@ import (
 type Server struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
-	ch      chan types.RenderRequest
-	widgets types.Widget
+	ch      chan chan_utils.Message
+	widgets []types.Widget
 
 	*graphics.Graphics
 }
@@ -27,7 +27,7 @@ func New(ctx context.Context, widgets ...types.Widget) *Server {
 		ctx:      ctx,
 		widgets:  widgets,
 		Graphics: graphics.New(),
-		ch:       make(chan types.RenderRequest, 10),
+		ch:       make(chan chan_utils.Message, 10),
 	}
 }
 
@@ -68,12 +68,12 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) onRenderRequest(data chan_utils.Message) {
-	msg, ok := data.(types.Render)
+	msg, ok := data.(types.RenderRequest)
 	if !ok {
 		panic("!ok")
 	}
 	log.Printf("INFO: got to render %#v", string(msg))
-	_, err := s.Write(msg.GetMessage())
+	_, err := s.Write(msg)
 	if err != nil {
 		panic(err)
 	}
