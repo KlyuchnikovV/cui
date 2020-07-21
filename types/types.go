@@ -2,21 +2,9 @@ package types
 
 import (
 	"os"
-
-	"github.com/KlyuchnikovV/chan_utils"
 )
 
-type Message []byte
-
-func (r Message) GetMessage() chan_utils.Message {
-	return r
-}
-
-func (r Message) String() string {
-	return string(r)
-}
-
-func (r Message) Signal() {}
+type Message interface{}
 
 type Widget interface {
 	Render(Message)

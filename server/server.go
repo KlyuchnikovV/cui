@@ -73,7 +73,7 @@ func (s *Server) update() {
 				return
 			}
 
-			log.Printf("TRACE: got to update %s", string(msg))
+			log.Printf("TRACE: got to update %#v", msg)
 			for _, widget := range s.widgets {
 				widget.Render(msg)
 			}
