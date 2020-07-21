@@ -1,6 +1,8 @@
-package cui
+package graphics
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type GraphicsMode interface {
 	getGraphicsModeString() string
@@ -76,4 +78,40 @@ const (
 	Cyan    color = 6
 	White   color = 7
 	NoColor color = 8
+)
+
+type ClearMode interface {
+	getModeInt() int
+}
+
+type clearMode int
+
+func (c clearMode) getModeInt() int {
+	return int(c)
+}
+
+const (
+	clearScreen string = "\x1b[%dJ"
+
+	ClearAfterCursor  clearMode = 0 // 0 - clears all from cursors position to the end of terminal
+	ClearBeforeCursor clearMode = 1 // 1 - clears all from cursors position to the start of terminal
+	ClearAll          clearMode = 2 // 2 - clears all
+)
+
+type ClearLineMode interface {
+	getLineModeInt() int
+}
+
+type clearLineMode int
+
+func (c clearLineMode) getLineModeInt() int {
+	return int(c)
+}
+
+const (
+	clearLine string = "\x1b[%dK"
+
+	ClearLineAfterCursor  clearMode = 0 // 0 - clears all from cursors position to the end of Line
+	ClearLineBeforeCursor clearMode = 1 // 1 - clears all from cursors position to the start of line
+	ClearAllLine          clearMode = 2 // 2 - clears all line
 )
