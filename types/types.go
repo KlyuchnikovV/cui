@@ -20,6 +20,7 @@ func (r RenderRequest) Signal() {}
 
 type Widget interface {
 	Render(RenderRequest)
+	ProcessSystemSignal(os.Signal)
 }
 
 type ConsoleStream interface {

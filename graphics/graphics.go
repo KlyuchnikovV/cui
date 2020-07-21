@@ -4,23 +4,31 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/KlyuchnikovV/cui/cursor"
 	"github.com/KlyuchnikovV/cui/low_level/terminal"
 	"github.com/KlyuchnikovV/cui/types"
 )
 
 type Graphics struct {
 	types.ConsoleStream
+	cursor.Cursor
 	width  int
 	height int
 }
 
-func New() *Graphics {
+func New() (*Graphics, error) {
+	c, err := cursor.New()
+	if err != nil {
+		return nil, err
+	}
+
 	w, h := terminal.GetTerminalSize()
 	return &Graphics{
 		ConsoleStream: types.NewConsoleStream(),
+		Cursor:        *c,
 		width:         w,
 		height:        h,
-	}
+	}, nil
 }
 
 func (g *Graphics) ClearScreen(mode ClearMode) {
@@ -53,6 +61,15 @@ func (g *Graphics) ResetForegroundColor() {
 
 func (g *Graphics) ResetBackgroundColor() {
 	g.Print(fmt.Sprintf(setGraphics, ResetBackgroundColor.getGraphicsModeString()))
+}
+
+func (g *Graphics) PrintAt(x, y int, s string, restorePosition bool) {
+	if restorePosition {
+		g.SavePosition()
+		defer g.RestorePosition()
+	}
+	g.SetCursor(x, y)
+	g.Print(s)
 }
 
 // func (g *Graphics) DrawRectangle(x, y, width, height int, symbol rune) error {

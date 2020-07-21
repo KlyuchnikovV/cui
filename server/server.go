@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -19,16 +20,22 @@ type Server struct {
 	ch      chan chan_utils.Message
 	widgets []types.Widget
 
+	types.ErrorChannel
 	*graphics.Graphics
 }
 
-func New(ctx context.Context, widgets ...types.Widget) *Server {
-	return &Server{
-		ctx:      ctx,
-		widgets:  widgets,
-		Graphics: graphics.New(),
-		ch:       make(chan chan_utils.Message, 10),
+func New(ctx context.Context, widgets ...types.Widget) (*Server, error) {
+	g, err := graphics.New()
+	if err != nil {
+		return nil, err
 	}
+	return &Server{
+		ctx:          ctx,
+		widgets:      widgets,
+		Graphics:     g,
+		ch:           make(chan chan_utils.Message, 1),
+		ErrorChannel: types.NewErrorChannel(1),
+	}, nil
 }
 
 func (s *Server) RegisterWidgets(widgets ...types.Widget) {
@@ -39,22 +46,39 @@ func (s *Server) StartRendering(async bool) {
 	if s.cancel != nil {
 		return
 	}
+	s.ctx, s.cancel = context.WithCancel(s.ctx)
 
-	render, cancel := chan_utils.NewListener(s.ctx, s.ch, s.onRenderRequest, func(err error) {
-		log.Panic(err)
-	})
-
-	s.cancel = cancel
-
-	// Listening to window resize
 	ch := make(chan os.Signal, 1)
+	// Listening to window resize
 	signal.Notify(ch, syscall.SIGWINCH)
-	go s.listenSysCalls(ch)
+	go s.redirectSignals(ch)
 
 	if async {
-		go render()
+		go s.render()
 	} else {
-		render()
+		s.render()
+	}
+}
+
+func (s *Server) render() {
+	defer func() {
+		if e := recover(); e != nil {
+			s.SendError(e.(error))
+		}
+	}()
+
+	for {
+		select {
+		case msg, ok := <-s.ch:
+			if !ok {
+				s.SendError(fmt.Errorf("channel was closed"))
+				return
+			}
+
+			s.onRenderRequest(msg)
+		case <-s.ctx.Done():
+			return
+		}
 	}
 }
 
@@ -70,12 +94,12 @@ func (s *Server) Stop() {
 func (s *Server) onRenderRequest(data chan_utils.Message) {
 	msg, ok := data.(types.RenderRequest)
 	if !ok {
-		panic("!ok")
+		s.SendError(fmt.Errorf("data wasn't of type \"%T\"", msg))
+		return
 	}
 	log.Printf("INFO: got to render %#v", string(msg))
-	_, err := s.Write(msg)
-	if err != nil {
-		panic(err)
+	if _, err := s.Write(msg); err != nil {
+		s.SendError(err)
 	}
 }
 
@@ -83,15 +107,16 @@ func (s *Server) GetRenderChan() chan chan_utils.Message {
 	return s.ch
 }
 
-func (s *Server) listenSysCalls(ch chan os.Signal) {
+func (s *Server) redirectSignals(ch chan os.Signal) {
 	for {
 		select {
-		case request, ok := <-ch:
+		case signal, ok := <-ch:
 			if !ok {
-				log.Panic("sig channel was closed")
+				s.SendError(fmt.Errorf("signal channel was unexpectedly closed"))
+				return
 			}
 			for _, listener := range s.widgets {
-				listener.Render(request)
+				listener.ProcessSystemSignal(signal)
 			}
 		case <-s.ctx.Done():
 			return

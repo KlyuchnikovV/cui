@@ -1,20 +1,12 @@
 package cui
 
 import (
-	"github.com/KlyuchnikovV/cui/server"
-	"github.com/KlyuchnikovV/cui/graphics"
 	"context"
-	"fmt"
-	"io"
 	"log"
-	"os"
-	"os/signal"
-	"regexp"
-	"strconv"
-	"strings"
-	"syscall"
 
-	"github.com/KlyuchnikovV/chan_utils"
+	"github.com/KlyuchnikovV/cui/server"
+	"github.com/KlyuchnikovV/cui/types"
+
 	"github.com/KlyuchnikovV/cui/low_level/raw_mode"
 )
 
@@ -28,8 +20,13 @@ func New(ctx context.Context, enableRaw bool, widgets ...types.Widget) (*Console
 		raw_mode.EnableRawMode()
 	}
 
+	s, err := server.New(ctx, widgets...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &ConsoleUI{
-		Server: server.New(ctx, widgets...)
+		Server: *s,
 	}, nil
 }
 
