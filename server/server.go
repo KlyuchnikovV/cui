@@ -10,14 +10,12 @@ import (
 
 	"github.com/KlyuchnikovV/cui/graphics"
 	"github.com/KlyuchnikovV/cui/types"
-
-	"github.com/KlyuchnikovV/chan_utils"
 )
 
 type Server struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
-	ch      chan chan_utils.Message
+	ch      chan types.Message
 	widgets []types.Widget
 
 	types.ErrorChannel
@@ -33,7 +31,7 @@ func New(ctx context.Context, widgets ...types.Widget) (*Server, error) {
 		ctx:          ctx,
 		widgets:      widgets,
 		Graphics:     g,
-		ch:           make(chan chan_utils.Message, 1),
+		ch:           make(chan types.Message, 1),
 		ErrorChannel: types.NewErrorChannel(1),
 	}, nil
 }
@@ -54,13 +52,13 @@ func (s *Server) StartRendering(async bool) {
 	go s.redirectSignals(ch)
 
 	if async {
-		go s.render()
+		go s.update()
 	} else {
-		s.render()
+		s.update()
 	}
 }
 
-func (s *Server) render() {
+func (s *Server) update() {
 	defer func() {
 		if e := recover(); e != nil {
 			s.SendError(e.(error))
@@ -71,11 +69,14 @@ func (s *Server) render() {
 		select {
 		case msg, ok := <-s.ch:
 			if !ok {
-				s.SendError(fmt.Errorf("channel was closed"))
+				s.SendError(fmt.Errorf("update channel was unexpectedly closed"))
 				return
 			}
 
-			s.onRenderRequest(msg)
+			log.Printf("TRACE: got to update %s", string(msg))
+			for _, widget := range s.widgets {
+				widget.Render(msg)
+			}
 		case <-s.ctx.Done():
 			return
 		}
@@ -91,23 +92,17 @@ func (s *Server) Stop() {
 	s.cancel = nil
 }
 
-func (s *Server) onRenderRequest(data chan_utils.Message) {
-	msg, ok := data.(types.RenderRequest)
-	if !ok {
-		s.SendError(fmt.Errorf("data wasn't of type \"%T\"", msg))
-		return
-	}
-	log.Printf("INFO: got to render %#v", string(msg))
-	if _, err := s.Write(msg); err != nil {
-		s.SendError(err)
-	}
-}
-
-func (s *Server) GetRenderChan() chan chan_utils.Message {
+func (s *Server) GetRenderChan() chan types.Message {
 	return s.ch
 }
 
 func (s *Server) redirectSignals(ch chan os.Signal) {
+	defer func() {
+		if e := recover(); e != nil {
+			s.SendError(e.(error))
+		}
+	}()
+
 	for {
 		select {
 		case signal, ok := <-ch:
@@ -115,6 +110,8 @@ func (s *Server) redirectSignals(ch chan os.Signal) {
 				s.SendError(fmt.Errorf("signal channel was unexpectedly closed"))
 				return
 			}
+
+			log.Printf("TRACE: got signal %#v", signal)
 			for _, listener := range s.widgets {
 				listener.ProcessSystemSignal(signal)
 			}

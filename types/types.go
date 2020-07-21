@@ -6,20 +6,20 @@ import (
 	"github.com/KlyuchnikovV/chan_utils"
 )
 
-type RenderRequest []byte
+type Message []byte
 
-func (r RenderRequest) GetMessage() chan_utils.Message {
+func (r Message) GetMessage() chan_utils.Message {
 	return r
 }
 
-func (r RenderRequest) String() string {
+func (r Message) String() string {
 	return string(r)
 }
 
-func (r RenderRequest) Signal() {}
+func (r Message) Signal() {}
 
 type Widget interface {
-	Render(RenderRequest)
+	Render(Message)
 	ProcessSystemSignal(os.Signal)
 }
 
