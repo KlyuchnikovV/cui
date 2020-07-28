@@ -22,18 +22,14 @@ type Server struct {
 	*graphics.Graphics
 }
 
-func New(ctx context.Context, widgets ...types.Widget) (*Server, error) {
-	g, err := graphics.New()
-	if err != nil {
-		return nil, err
-	}
+func New(ctx context.Context, widgets ...types.Widget) *Server {
 	return &Server{
 		ctx:          ctx,
 		widgets:      widgets,
-		Graphics:     g,
+		Graphics:     graphics.New(),
 		ch:           make(chan types.Message, 1),
 		ErrorChannel: types.NewErrorChannel(1),
-	}, nil
+	}
 }
 
 func (s *Server) RegisterWidgets(widgets ...types.Widget) {
@@ -64,6 +60,10 @@ func (s *Server) update() {
 			s.SendError(e.(error))
 		}
 	}()
+
+	for _, listener := range s.widgets {
+		listener.Render(types.NewSignalMsg(syscall.SIGWINCH))
+	}
 
 	for {
 		select {
@@ -112,8 +112,10 @@ func (s *Server) redirectSignals(ch chan os.Signal) {
 			}
 
 			log.Printf("TRACE: got signal %#v", signal)
+			s.SetCursor(0, 0)
+			s.ClearScreen(graphics.ClearAfterCursor)
 			for _, listener := range s.widgets {
-				listener.ProcessSystemSignal(signal)
+				listener.Render(types.NewSignalMsg(signal))
 			}
 		case <-s.ctx.Done():
 			return

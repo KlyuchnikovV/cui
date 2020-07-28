@@ -14,20 +14,15 @@ type ConsoleUI struct {
 	server.Server
 }
 
-func New(ctx context.Context, enableRaw bool, widgets ...types.Widget) (*ConsoleUI, error) {
+func New(ctx context.Context, enableRaw bool, widgets ...types.Widget) *ConsoleUI {
 	if enableRaw {
 		log.Print("entering raw")
 		raw_mode.EnableRawMode()
 	}
 
-	s, err := server.New(ctx, widgets...)
-	if err != nil {
-		return nil, err
-	}
-
 	return &ConsoleUI{
-		Server: *s,
-	}, nil
+		Server: *server.New(ctx, widgets...),
+	}
 }
 
 func (c *ConsoleUI) DisableRawMode() {

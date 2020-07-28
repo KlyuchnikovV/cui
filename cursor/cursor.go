@@ -2,37 +2,20 @@ package cursor
 
 import (
 	"fmt"
-	"os"
-	"regexp"
-	"strconv"
 
 	"github.com/KlyuchnikovV/cui/types"
 )
 
-type Cursor struct {
-	// Unused for now
-	x, y           int
-	cursorPosition *regexp.Regexp
+// TODO: how to automatically test GetCursor
 
+type Cursor struct {
 	types.ConsoleStream
 }
 
-func New() (*Cursor, error) {
-	r, err := regexp.Compile(cursorPositionFormat)
-	if err != nil {
-		return nil, err
+func New() *Cursor {
+	return &Cursor{
+		ConsoleStream: types.NewConsoleStream(),
 	}
-	c := &Cursor{
-		cursorPosition: r,
-		ConsoleStream:  types.NewConsoleStream(),
-	}
-	c.x, c.y, err = c.GetCursor()
-
-	return c, err
-}
-
-func (c *Cursor) Move(where CursorMovement, nTimes int) {
-	c.Print(fmt.Sprintf(where.getString(), nTimes))
 }
 
 func (c *Cursor) SetCursor(x, y int) {
@@ -42,36 +25,14 @@ func (c *Cursor) SetCursor(x, y int) {
 func (c *Cursor) GetCursor() (int, int, error) {
 	c.Print(getCursorPosition)
 
-	var bytes = make([]byte, 7)
-	if _, err := os.Stdin.Read(bytes); err != nil {
-		return 0, 0, err
-	}
-
-	return c.parsePosition(bytes)
+	var x, y int
+	_, err := fmt.Scanf(cursorPositionFormat, &x, &y)
+	return x, y, err
 }
 
-func (c *Cursor) parsePosition(bytes []byte) (int, int, error) {
-	matches := c.cursorPosition.FindStringSubmatch(string(bytes))
-	if len(matches) != 3 {
-		return 0, 0, fmt.Errorf("couldn't parse response: %s", string(bytes))
-	}
-	x, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return 0, 0, err
-	}
-	y, err := strconv.Atoi(matches[2])
-	if err != nil {
-		return 0, 0, err
-	}
-	return x, y, nil
+func (c *Cursor) Move(where CursorMovement, nTimes int) {
+	c.Print(fmt.Sprintf(where.getString(), nTimes))
 }
-
-// func (c *ConsoleUI) PrintAt(x, y int, s string) {
-// 	c.Print(saveCurPos)
-// 	c.SetCursor(x, y)
-// 	c.Print(s)
-// 	c.Print(restoreCurPos)
-// }
 
 func (c *Cursor) ShowCursor(show bool) {
 	var mode string

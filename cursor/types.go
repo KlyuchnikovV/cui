@@ -2,7 +2,7 @@ package cursor
 
 const (
 	getCursorPosition     string = "\x1b[6n"
-	cursorPositionFormat  string = "\\x1b\\[([0-9]+);([0-9]+)R" // x (line); y (column)
+	cursorPositionFormat  string = "\x1bs[%d;%dR" // x (line); y (column)
 	setCursorPosition     string = "\x1b[%d;%dH"
 	scrollUp              string = "\x1b[%dS"
 	scrollDown            string = "\x1b[%dT"

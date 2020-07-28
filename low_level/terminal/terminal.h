@@ -1,7 +1,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-struct Size {
+struct Size
+{
     int width;
     int height;
 };

@@ -16,19 +16,14 @@ type Graphics struct {
 	height int
 }
 
-func New() (*Graphics, error) {
-	c, err := cursor.New()
-	if err != nil {
-		return nil, err
-	}
-
+func New() *Graphics {
 	w, h := terminal.GetTerminalSize()
 	return &Graphics{
 		ConsoleStream: types.NewConsoleStream(),
-		Cursor:        *c,
+		Cursor:        *cursor.New(),
 		width:         w,
 		height:        h,
-	}, nil
+	}
 }
 
 func (g *Graphics) ClearScreen(mode ClearMode) {
@@ -72,17 +67,23 @@ func (g *Graphics) PrintAt(x, y int, s string, restorePosition bool) {
 	g.Print(s)
 }
 
-// func (g *Graphics) DrawRectangle(x, y, width, height int, symbol rune) error {
-// 	// if x < 0 || x > c.width {
-// 	// 	return fmt.Errorf("wrong x coordinate")
-// 	// }
+func (g *Graphics) DrawRectangle(x, y, width, height int, symbol rune) error {
+	termW, termH := terminal.GetTerminalSize()
+	if x < 0 || x > termH {
+		return fmt.Errorf("wrong x coordinate")
+	}
+	if y < 0 || y > termW {
+		return fmt.Errorf("wrong Y coordinate")
+	}
 
-// 	var lines = make([]string, height)
-// 	lines[0] = strings.Repeat(string(symbol), width)
-// 	lines[len(lines)-1] = lines[0]
-// 	for i := 1; i < len(lines)-1; i++ {
-// 		lines[i] = fmt.Sprintf("%c%s%c", symbol, strings.Repeat(" ", width-2), symbol)
-// 	}
-// 	g.PrintAt(x, y, strings.Join(lines, "\n"))
-// 	return nil
-// }
+	for i := y; i < y+width; i++ {
+		g.PrintAt(x, i, string(symbol), false)
+		g.PrintAt(x+height, i, string(symbol), false)
+	}
+
+	for i := x; i < x+height; i++ {
+		g.PrintAt(i, y, string(symbol), false)
+		g.PrintAt(i, y+width, string(symbol), false)
+	}
+	return nil
+}
