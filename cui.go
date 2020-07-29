@@ -7,7 +7,7 @@ import (
 	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/types"
 
-	"github.com/KlyuchnikovV/cui/low_level/raw_mode"
+	"github.com/KlyuchnikovV/termin/low_level/raw_mode"
 )
 
 type ConsoleUI struct {

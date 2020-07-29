@@ -1,3 +1,7 @@
+github.com/KlyuchnikovV/termin v0.0.0-20200728143123-36e21b00a24f h1:3gOWYNli05qkpg/1MOB6PQXoA+esnVqaOSVGayIiMEs=
+github.com/KlyuchnikovV/termin v0.0.0-20200728143123-36e21b00a24f/go.mod h1:f0v4255lHC1nGc0FeiFXyecOrdc06JkZMkkWWWfaf6Q=
+github.com/KlyuchnikovV/termin v0.0.0-20200729141221-9c8d0de30dea h1:Ovd/405HjyDtz9PG92/ugq8XpGOAO0xeCrDLwXPVWmU=
+github.com/KlyuchnikovV/termin v0.0.0-20200729141221-9c8d0de30dea/go.mod h1:f0v4255lHC1nGc0FeiFXyecOrdc06JkZMkkWWWfaf6Q=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
