@@ -28,7 +28,7 @@ jobs:
             dep ensure
         fi
     - name: Format
-      uses: Jerome1337/gofmt-action@v1.0.2
+      uses: sladyn98/auto-go-format@v0.0.1
       
     - name: Build
       run: go build -v .
