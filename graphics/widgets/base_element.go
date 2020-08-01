@@ -6,7 +6,7 @@ import (
 )
 
 type baseElement struct {
-	c        *cui.ConsoleUI
+	*cui.ConsoleUI
 	options  map[string]interface{}
 	children []types.Widget
 }
@@ -16,9 +16,9 @@ func newBaseElement(c *cui.ConsoleUI, options map[string]interface{}, children .
 		options = make(map[string]interface{})
 	}
 	return &baseElement{
-		c:        c,
-		options:  options,
-		children: children,
+		ConsoleUI: c,
+		options:   options,
+		children:  children,
 	}
 }
 

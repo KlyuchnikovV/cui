@@ -22,13 +22,6 @@ func NewDiv(c *cui.ConsoleUI, text string) *Div {
 func (d *Div) Render(msg types.Message) {
 	msg.Exec(d)
 	x, y, w, h := d.GetIntOption("x"), d.GetIntOption("y"), d.GetIntOption("w"), d.GetIntOption("h")
-	switch d.GetIntOption("sizePolicy") {
-	case 0:
-		log.Printf("%s draw at %d %d %d %d\n", d.text, x, y, h, w)
-		if err := d.c.DrawRectangle(x, y, w, h, types.FullBlock); err != nil {
-			d.c.ErrorChannel.SendError(err)
-			return
-		}
-		d.c.PrintAt(x+h/2, y+w/2, d.text, true)
-	}
+	log.Printf("%s draw at %d %d %d %d\n", d.text, x, y, h, w)
+	d.PrintAt(x+h/2, y+w/2, d.text, true)
 }

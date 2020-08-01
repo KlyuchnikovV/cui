@@ -14,14 +14,14 @@ type ConsoleUI struct {
 	server.Server
 }
 
-func New(ctx context.Context, enableRaw bool, widgets ...types.Widget) *ConsoleUI {
+func New(ctx context.Context, enableRaw bool, widgets map[server.ChanEnum][]types.Widget) *ConsoleUI {
 	if enableRaw {
 		log.Print("entering raw")
 		raw_mode.EnableRawMode()
 	}
 
 	return &ConsoleUI{
-		Server: *server.New(ctx, widgets...),
+		Server: *server.New(ctx, widgets),
 	}
 }
 

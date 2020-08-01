@@ -10,30 +10,37 @@ import (
 
 	"github.com/KlyuchnikovV/cui/graphics"
 	"github.com/KlyuchnikovV/cui/types"
+	"github.com/KlyuchnikovV/termin"
 )
 
 type Server struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
 	ch      chan types.Message
-	widgets []types.Widget
+	t       *termin.Termin
+	widgets map[ChanEnum][]types.Widget
 
 	types.ErrorChannel
 	*graphics.Graphics
 }
 
-func New(ctx context.Context, widgets ...types.Widget) *Server {
+func New(ctx context.Context, widgets map[ChanEnum][]types.Widget) *Server {
+
 	return &Server{
 		ctx:          ctx,
 		widgets:      widgets,
 		Graphics:     graphics.New(),
 		ch:           make(chan types.Message, 1),
 		ErrorChannel: types.NewErrorChannel(1),
+		t:            termin.New(),
 	}
 }
 
-func (s *Server) RegisterWidgets(widgets ...types.Widget) {
-	s.widgets = append(s.widgets, widgets...)
+func (s *Server) SubscribeWidget(key ChanEnum, widget types.Widget) {
+	if s.widgets == nil {
+		s.widgets = make(map[ChanEnum][]types.Widget)
+	}
+	s.widgets[key] = append(s.widgets[key], widget)
 }
 
 func (s *Server) StartRendering(async bool) {
@@ -46,6 +53,9 @@ func (s *Server) StartRendering(async bool) {
 	// Listening to window resize
 	signal.Notify(ch, syscall.SIGWINCH)
 	go s.redirectSignals(ch)
+
+	// Listening to keys
+	s.t.StartReading(true)
 
 	if async {
 		go s.update()
@@ -61,12 +71,21 @@ func (s *Server) update() {
 		}
 	}()
 
-	for _, listener := range s.widgets {
+	for _, listener := range s.widgets[ResizeChan] {
 		listener.Render(types.NewSignalMsg(syscall.SIGWINCH))
 	}
 
 	for {
 		select {
+		case msg, ok := <-s.t.GetChan():
+			if !ok {
+				s.SendError(fmt.Errorf("runes channel was unexpectedly closed"))
+				return
+			}
+			log.Printf("TRACE: got to rune %s", string(msg))
+			for _, widget := range s.widgets[KeyboardChan] {
+				widget.Render(types.NewKeyboardMsg(msg))
+			}
 		case msg, ok := <-s.ch:
 			if !ok {
 				s.SendError(fmt.Errorf("update channel was unexpectedly closed"))
@@ -74,7 +93,7 @@ func (s *Server) update() {
 			}
 
 			log.Printf("TRACE: got to update %#v", msg)
-			for _, widget := range s.widgets {
+			for _, widget := range s.widgets[ResizeChan] {
 				widget.Render(msg)
 			}
 		case <-s.ctx.Done():
@@ -114,7 +133,7 @@ func (s *Server) redirectSignals(ch chan os.Signal) {
 			log.Printf("TRACE: got signal %#v", signal)
 			s.SetCursor(0, 0)
 			s.ClearScreen(graphics.ClearAfterCursor)
-			for _, listener := range s.widgets {
+			for _, listener := range s.widgets[ResizeChan] {
 				listener.Render(types.NewSignalMsg(signal))
 			}
 		case <-s.ctx.Done():

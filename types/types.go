@@ -4,55 +4,15 @@ import (
 	"os"
 )
 
-type Message interface {
-	Exec(Widget)
-}
-
-type ResizeMsg struct {
-	x, y int
-	w, h int
-}
-
-func NewResizeMsg(x, y, w, h int) *ResizeMsg {
-	return &ResizeMsg{
-		x: x,
-		y: y,
-		w: w,
-		h: h,
-	}
-}
-
-func (r *ResizeMsg) Exec(w Widget) {
-	w.SetOptions(map[string]interface{}{
-		"x": r.x,
-		"y": r.y,
-		"w": r.w,
-		"h": r.h,
-	})
-}
-
-type SignalMsg struct {
-	signal os.Signal
-}
-
-func NewSignalMsg(signal os.Signal) *SignalMsg {
-	return &SignalMsg{
-		signal: signal,
-	}
-}
-
-func (s *SignalMsg) Exec(w Widget) {
-	w.SetOptions(map[string]interface{}{
-		"signal": s.signal,
-	})
-}
-
 type Widget interface {
 	Render(Message)
-	// ProcessSystemSignal(os.Signal)
-	SetOptions(opts map[string]interface{})
-	GetOption(s string) interface{}
+	SetOptions(map[string]interface{})
+	GetOption(string) interface{}
+	GetIntOption(string) int
 	GetOptions() map[string]interface{}
+	SendError(error)
+	DrawRectangle(int, int, int, int, rune) error
+	// PrintAt(int, int, string, bool)
 }
 
 type ConsoleStream interface {

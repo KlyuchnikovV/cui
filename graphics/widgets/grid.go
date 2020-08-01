@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"github.com/KlyuchnikovV/cui"
+	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/types"
 )
 
@@ -11,10 +12,12 @@ type Grid struct {
 }
 
 func NewGrid(c *cui.ConsoleUI, children [][]types.Widget) *Grid {
-	return &Grid{
+	g := &Grid{
 		baseElement: *newBaseElement(c, nil, nil),
 		children:    children,
 	}
+	c.SubscribeWidget(server.ResizeChan, g)
+	return g
 }
 
 func (g *Grid) Render(msg types.Message) {
