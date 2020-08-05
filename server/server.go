@@ -82,7 +82,7 @@ func (s *Server) update() {
 				s.SendError(fmt.Errorf("runes channel was unexpectedly closed"))
 				return
 			}
-			log.Printf("TRACE: got to rune %s", string(msg))
+			log.Printf("TRACE: got key %#v", msg)
 			for _, widget := range s.widgets[KeyboardChan] {
 				widget.Render(types.NewKeyboardMsg(msg))
 			}

@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"log"
 	"os"
 	"syscall"
 
@@ -24,13 +25,16 @@ func NewBody(c *cui.ConsoleUI, children ...types.Widget) *Body {
 }
 
 func (b *Body) Render(msg types.Message) {
+	b.SavePosition()
 	msg.Exec(b)
 	switch b.GetOption("signal").(os.Signal) {
 	case syscall.SIGWINCH:
 		b.ClearScreen(graphics.ClearAll)
 		b.options["w"], b.options["h"] = terminal.GetTerminalSize()
+		log.Printf("BODY: w: %d, h: %d", b.GetIntOption("w"), b.GetIntOption("h"))
 		for _, child := range b.children {
 			child.Render(types.NewResizeMsg(b.GetIntOption("x"), b.GetIntOption("y"), b.GetIntOption("w"), b.GetIntOption("h")))
 		}
 	}
+	b.RestorePosition()
 }

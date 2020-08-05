@@ -3,6 +3,8 @@ package types
 import (
 	// "log"
 	"os"
+
+	"github.com/KlyuchnikovV/termin/keys"
 )
 
 type Message interface {
@@ -24,6 +26,13 @@ func NewResizeMsg(x, y, w, h int) *ResizeMsg {
 }
 
 func (r *ResizeMsg) Exec(w Widget) {
+	// TODO: terminal count symbols from 1
+	if r.x < 1 {
+		r.x = 1
+	}
+	if r.y < 1 {
+		r.y = 1
+	}
 	w.SetOptions(map[string]interface{}{
 		"x": r.x,
 		"y": r.y,
@@ -56,10 +65,10 @@ func (s *SignalMsg) Exec(w Widget) {
 }
 
 type KeyboardMsg struct {
-	r rune
+	r keys.KeyboardKey
 }
 
-func NewKeyboardMsg(r rune) *KeyboardMsg {
+func NewKeyboardMsg(r keys.KeyboardKey) *KeyboardMsg {
 	return &KeyboardMsg{
 		r: r,
 	}

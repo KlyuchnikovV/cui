@@ -19,6 +19,7 @@ func New() *Cursor {
 }
 
 func (c *Cursor) SetCursor(x, y int) {
+	// log.Printf("CURSOR: set position x: %d, y: %d", x, y)
 	c.Print(fmt.Sprintf(setCursorPosition, x, y))
 }
 

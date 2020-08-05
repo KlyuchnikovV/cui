@@ -68,6 +68,8 @@ func (g *Graphics) PrintAt(x, y int, s string, restorePosition bool) {
 }
 
 func (g *Graphics) DrawRectangle(x, y, width, height int, symbol rune) error {
+	g.SavePosition()
+	defer g.RestorePosition()
 	termW, termH := terminal.GetTerminalSize()
 	if x < 0 || x > termH {
 		return fmt.Errorf("wrong x coordinate")

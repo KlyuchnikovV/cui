@@ -111,7 +111,7 @@ func (c clearLineMode) getLineModeInt() int {
 const (
 	clearLine string = "\x1b[%dK"
 
-	ClearLineAfterCursor  clearMode = 0 // 0 - clears all from cursors position to the end of Line
-	ClearLineBeforeCursor clearMode = 1 // 1 - clears all from cursors position to the start of line
-	ClearAllLine          clearMode = 2 // 2 - clears all line
+	ClearLineAfterCursor  clearLineMode = 0 // 0 - clears all from cursors position to the end of Line
+	ClearLineBeforeCursor clearLineMode = 1 // 1 - clears all from cursors position to the start of line
+	ClearAllLine          clearLineMode = 2 // 2 - clears all line
 )
