@@ -6,12 +6,12 @@ import (
 
 	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/types"
-
 	"github.com/KlyuchnikovV/termin/low_level/raw_mode"
 )
 
 type ConsoleUI struct {
 	server.Server
+	body types.Widget
 }
 
 func New(ctx context.Context, enableRaw bool, widgets map[server.ChanEnum][]types.Widget) *ConsoleUI {
@@ -27,4 +27,8 @@ func New(ctx context.Context, enableRaw bool, widgets map[server.ChanEnum][]type
 
 func (c *ConsoleUI) DisableRawMode() {
 	raw_mode.DisableRawMode()
+}
+
+func (c *ConsoleUI) Layout(generator func(*ConsoleUI) types.Widget) {
+	c.body = generator(c)
 }

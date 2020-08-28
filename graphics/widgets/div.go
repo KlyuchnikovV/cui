@@ -12,16 +12,18 @@ type Div struct {
 	text string
 }
 
-func NewDiv(c *cui.ConsoleUI, text string) *Div {
-	return &Div{
-		baseElement: *newBaseElement(c, nil),
-		text:        text,
+func NewDiv(text string) func(c *cui.ConsoleUI) types.Widget {
+	return func(c *cui.ConsoleUI) types.Widget {
+		return &Div{
+			baseElement: *newBaseElement(c, nil),
+			text:        text,
+		}
 	}
 }
 
 func (d *Div) Render(msg types.Message) {
+	log.Print("div: exec")
 	msg.Exec(d)
-	x, y, w, h := d.GetIntOption("x"), d.GetIntOption("y"), d.GetIntOption("w"), d.GetIntOption("h")
-	log.Printf("%s draw at %d %d %d %d\n", d.text, x, y, h, w)
-	d.PrintAt(x+h/2, y+w/2, d.text, true)
+	d.PrintAt(d.X()+d.H()/2, d.Y()+d.W()/2, d.text, true)
+	log.Printf("div: print %s at %d %d", d.text, d.X()+d.H()/2, d.Y()+d.W()/2)
 }

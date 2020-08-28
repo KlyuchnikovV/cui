@@ -4,15 +4,22 @@ import (
 	"os"
 )
 
+// type WidgetGenerator func(*cui.ConsoleUI) Widget
+
 type Widget interface {
 	Render(Message)
+	SetOption(string, interface{})
 	SetOptions(map[string]interface{})
 	GetOption(string) interface{}
 	GetIntOption(string) int
 	GetOptions() map[string]interface{}
 	SendError(error)
 	DrawRectangle(int, int, int, int, rune) error
-	// PrintAt(int, int, string, bool)
+	ClearScreen()
+	X() int
+	Y() int
+	W() int
+	H() int
 }
 
 type ConsoleStream interface {

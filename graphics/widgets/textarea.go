@@ -1,9 +1,7 @@
 package widgets
 
-//
 import (
 	"log"
-	"strings"
 
 	"github.com/KlyuchnikovV/cui"
 	"github.com/KlyuchnikovV/cui/server"
@@ -21,14 +19,15 @@ type Textarea struct {
 // TODO: move cursor to current area after every update (save/restore)
 // TODO: optimize subscription mechanism
 
-func NewTextarea(c *cui.ConsoleUI) *Textarea {
-	t := &Textarea{
-		baseElement: *newBaseElement(c, nil),
-		buffer:      *lines_buffer.NewBuffer(""),
+func NewTextarea() func(c *cui.ConsoleUI) types.Widget {
+	return func(c *cui.ConsoleUI) types.Widget {
+		t := &Textarea{
+			baseElement: *newBaseElement(c, nil),
+			buffer:      *lines_buffer.NewBuffer(""),
+		}
+		c.SubscribeWidget(server.KeyboardChan, t)
+		return t
 	}
-	c.SubscribeWidget(server.KeyboardChan, t)
-	c.SubscribeWidget(server.ResizeChan, t)
-	return t
 }
 
 func (t *Textarea) Render(msg types.Message) {
@@ -54,22 +53,13 @@ func (t *Textarea) Render(msg types.Message) {
 }
 
 func (t *Textarea) getAreaPosition() (int, int) {
-	x, y := t.GetIntOption("x"), t.GetIntOption("y")
+	x, y := t.X(), t.Y()
 	return x + 1, y + 1
 }
 
-func (t *Textarea) ClearScreen() {
-	w, h := t.GetIntOption("w"), t.GetIntOption("h")
-
-	t.SavePosition()
-	var replaceString = strings.Repeat(" ", w-2)
-	for i := 0; i < h-2; i++ {
-		t.PrintAt(i, 0, replaceString, false)
-	}
-	t.RestorePosition()
-}
-
 func (t *Textarea) printLines() {
+	t.SavePosition()
+	defer t.RestorePosition()
 	for i, line := range t.buffer.Lines() {
 		t.PrintAt(i, 0, line, false)
 	}

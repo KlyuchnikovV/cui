@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/KlyuchnikovV/cui/graphics"
+	"github.com/KlyuchnikovV/cui/low_level/terminal"
 	"github.com/KlyuchnikovV/cui/types"
 	"github.com/KlyuchnikovV/termin"
 )
@@ -17,30 +17,29 @@ type Server struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
 	ch      chan types.Message
-	t       *termin.Termin
-	widgets map[ChanEnum][]types.Widget
+	input   *termin.Termin
+	Widgets map[ChanEnum][]types.Widget
 
 	types.ErrorChannel
 	*graphics.Graphics
 }
 
 func New(ctx context.Context, widgets map[ChanEnum][]types.Widget) *Server {
-
+	if widgets == nil {
+		widgets = make(map[ChanEnum][]types.Widget)
+	}
 	return &Server{
 		ctx:          ctx,
-		widgets:      widgets,
+		Widgets:      widgets,
 		Graphics:     graphics.New(),
 		ch:           make(chan types.Message, 1),
 		ErrorChannel: types.NewErrorChannel(1),
-		t:            termin.New(),
+		input:        termin.New(),
 	}
 }
 
 func (s *Server) SubscribeWidget(key ChanEnum, widget types.Widget) {
-	if s.widgets == nil {
-		s.widgets = make(map[ChanEnum][]types.Widget)
-	}
-	s.widgets[key] = append(s.widgets[key], widget)
+	s.Widgets[key] = append(s.Widgets[key], widget)
 }
 
 func (s *Server) StartRendering(async bool) {
@@ -49,56 +48,13 @@ func (s *Server) StartRendering(async bool) {
 	}
 	s.ctx, s.cancel = context.WithCancel(s.ctx)
 
-	ch := make(chan os.Signal, 1)
-	// Listening to window resize
-	signal.Notify(ch, syscall.SIGWINCH)
-	go s.redirectSignals(ch)
-
 	// Listening to keys
-	s.t.StartReading(true)
+	s.input.StartReading(true)
 
 	if async {
 		go s.update()
 	} else {
 		s.update()
-	}
-}
-
-func (s *Server) update() {
-	defer func() {
-		if e := recover(); e != nil {
-			s.SendError(e.(error))
-		}
-	}()
-
-	for _, listener := range s.widgets[ResizeChan] {
-		listener.Render(types.NewSignalMsg(syscall.SIGWINCH))
-	}
-
-	for {
-		select {
-		case msg, ok := <-s.t.GetChan():
-			if !ok {
-				s.SendError(fmt.Errorf("runes channel was unexpectedly closed"))
-				return
-			}
-			log.Printf("TRACE: got key %#v", msg)
-			for _, widget := range s.widgets[KeyboardChan] {
-				widget.Render(types.NewKeyboardMsg(msg))
-			}
-		case msg, ok := <-s.ch:
-			if !ok {
-				s.SendError(fmt.Errorf("update channel was unexpectedly closed"))
-				return
-			}
-
-			log.Printf("TRACE: got to update %#v", msg)
-			for _, widget := range s.widgets[ResizeChan] {
-				widget.Render(msg)
-			}
-		case <-s.ctx.Done():
-			return
-		}
 	}
 }
 
@@ -115,12 +71,23 @@ func (s *Server) GetRenderChan() chan types.Message {
 	return s.ch
 }
 
-func (s *Server) redirectSignals(ch chan os.Signal) {
+func (s *Server) update() {
 	defer func() {
 		if e := recover(); e != nil {
-			s.SendError(e.(error))
+			err, ok := e.(error)
+			if !ok {
+			err = fmt.Errorf("%#v", e)
+			}
+			s.SendError(err)
 		}
 	}()
+
+	ch := make(chan os.Signal, 1)
+	// Listening to window resize
+	signal.Notify(ch, syscall.SIGWINCH)
+
+	// TODO: Initial update
+	ch <- syscall.SIGWINCH
 
 	for {
 		select {
@@ -130,14 +97,33 @@ func (s *Server) redirectSignals(ch chan os.Signal) {
 				return
 			}
 
-			log.Printf("TRACE: got signal %#v", signal)
-			s.SetCursor(0, 0)
-			s.ClearScreen(graphics.ClearAfterCursor)
-			for _, listener := range s.widgets[ResizeChan] {
-				listener.Render(types.NewSignalMsg(signal))
+			if signal != syscall.SIGWINCH {
+				s.SendError(fmt.Errorf("signal channel was unexpectedly closed"))
+				continue
 			}
+
+			w, h := terminal.GetTerminalSize()
+			s.broadcast(types.NewResizeMsg(nil, nil, &w, &h), s.Widgets[ResizeChan]...)
+		case msg, ok := <-s.input.GetChan():
+			if !ok {
+				s.SendError(fmt.Errorf("input channel was unexpectedly closed"))
+				return
+			}
+			s.broadcast(types.NewKeyboardMsg(msg), s.Widgets[KeyboardChan]...)
+		case msg, ok := <-s.ch:
+			if !ok {
+				s.SendError(fmt.Errorf("resize channel was unexpectedly closed"))
+				return
+			}
+			s.broadcast(msg, s.Widgets[ResizeChan]...)
 		case <-s.ctx.Done():
 			return
 		}
+	}
+}
+
+func (s *Server) broadcast(msg types.Message, widgets ...types.Widget) {
+	for _, widget := range widgets {
+		widget.Render(msg)
 	}
 }

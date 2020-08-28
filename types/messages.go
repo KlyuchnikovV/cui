@@ -1,7 +1,7 @@
 package types
 
 import (
-	// "log"
+	"log"
 	"os"
 
 	"github.com/KlyuchnikovV/termin/keys"
@@ -12,11 +12,22 @@ type Message interface {
 }
 
 type ResizeMsg struct {
-	x, y int
-	w, h int
+	x, y, w, h *int
 }
 
-func NewResizeMsg(x, y, w, h int) *ResizeMsg {
+func NewResizeMsg(x, y, w, h *int) *ResizeMsg {
+	if x != nil && *x < 1 {
+		*x = 1
+	}
+	if y != nil && *y < 1 {
+		*y = 1
+	}
+	if w != nil && *w < 1 {
+		*w = 1
+	}
+	if h != nil && *h < 1 {
+		*h = 1
+	}
 	return &ResizeMsg{
 		x: x,
 		y: y,
@@ -26,22 +37,24 @@ func NewResizeMsg(x, y, w, h int) *ResizeMsg {
 }
 
 func (r *ResizeMsg) Exec(w Widget) {
-	// TODO: terminal count symbols from 1
-	if r.x < 1 {
-		r.x = 1
+	log.Printf("%#v", *r.w)
+	if r.x != nil {
+		w.SetOption("x", *r.x)
 	}
-	if r.y < 1 {
-		r.y = 1
+	if r.y != nil {
+		w.SetOption("y", *r.y)
 	}
-	w.SetOptions(map[string]interface{}{
-		"x": r.x,
-		"y": r.y,
-		"w": r.w,
-		"h": r.h,
-	})
+	if r.w != nil {
+		w.SetOption("w", *r.w)
+	}
+	if r.h != nil {
+		w.SetOption("h", *r.h)
+	}
+
+	w.ClearScreen()
 	switch w.GetIntOption("sizePolicy") {
 	case 0:
-		if err := w.DrawRectangle(r.x, r.y, r.w, r.h, FullBlock); err != nil {
+		if err := w.DrawRectangle(w.X(), w.Y(), w.W(), w.H(), FullBlock); err != nil {
 			w.SendError(err)
 			return
 		}
@@ -59,9 +72,7 @@ func NewSignalMsg(signal os.Signal) *SignalMsg {
 }
 
 func (s *SignalMsg) Exec(w Widget) {
-	w.SetOptions(map[string]interface{}{
-		"signal": s.signal,
-	})
+	w.SetOption("signal", s.signal)
 }
 
 type KeyboardMsg struct {
@@ -75,7 +86,5 @@ func NewKeyboardMsg(r keys.KeyboardKey) *KeyboardMsg {
 }
 
 func (k *KeyboardMsg) Exec(w Widget) {
-	w.SetOptions(map[string]interface{}{
-		"rune": k.r,
-	})
+	w.SetOption("rune", k.r)
 }
