@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/KlyuchnikovV/cui"
-	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/types"
 	"github.com/KlyuchnikovV/lines_buffer"
 	"github.com/KlyuchnikovV/termin/keys"
@@ -19,13 +18,13 @@ type Textarea struct {
 // TODO: move cursor to current area after every update (save/restore)
 // TODO: optimize subscription mechanism
 
-func NewTextarea() func(c *cui.ConsoleUI) types.Widget {
+func NewTextarea(text string) WidgetGenerator {
 	return func(c *cui.ConsoleUI) types.Widget {
 		t := &Textarea{
 			baseElement: *newBaseElement(c, nil),
-			buffer:      *lines_buffer.NewBuffer(""),
+			buffer:      *lines_buffer.NewBuffer(text),
 		}
-		c.SubscribeWidget(server.KeyboardChan, t)
+		c.SubscribeWidget(types.KeyboardChan, t)
 		return t
 	}
 }

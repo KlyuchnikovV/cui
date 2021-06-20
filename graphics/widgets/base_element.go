@@ -7,13 +7,15 @@ import (
 	"github.com/KlyuchnikovV/cui/types"
 )
 
+type WidgetGenerator func(c *cui.ConsoleUI) types.Widget
+
 type baseElement struct {
 	*cui.ConsoleUI
 	options  map[string]interface{}
 	children []types.Widget
 }
 
-func newBaseElement(c *cui.ConsoleUI, options map[string]interface{}, children ...func(c *cui.ConsoleUI) types.Widget) *baseElement {
+func newBaseElement(c *cui.ConsoleUI, options map[string]interface{}, children ...WidgetGenerator) *baseElement {
 	var widgets = make([]types.Widget, len(children))
 	for i, widgetGenerator := range children {
 		widgets[i] = widgetGenerator(c)
@@ -61,7 +63,7 @@ func (b *baseElement) GetIntOption(s string) int {
 
 func (b *baseElement) ClearScreen() {
 	b.SavePosition()
-	var replaceString = strings.Repeat(" ", b.W()-3)
+	var replaceString = strings.Repeat(" ", b.W()-2)
 	for i := b.X() + 1; i < b.H(); i++ {
 		b.PrintAt(i, b.Y()+1, replaceString, false)
 	}
@@ -69,17 +71,33 @@ func (b *baseElement) ClearScreen() {
 }
 
 func (b *baseElement) X() int {
-	return b.GetIntOption("x")
+	x := b.GetIntOption("x")
+	if x < 1 {
+		x = 1
+	}
+	return x
 }
 
 func (b *baseElement) Y() int {
-	return b.GetIntOption("y")
+	y := b.GetIntOption("y")
+	if y < 1 {
+		y = 1
+	}
+	return y
 }
 
 func (b *baseElement) W() int {
-	return b.GetIntOption("w")
+	w := b.GetIntOption("w")
+	if w < 1 {
+		w = 1
+	}
+	return w
 }
 
 func (b *baseElement) H() int {
-	return b.GetIntOption("h")
+	h := b.GetIntOption("h")
+	if h < 1 {
+		h = 1
+	}
+	return h
 }

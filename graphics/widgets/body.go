@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"fmt"
 	"os"
 	"syscall"
 
@@ -13,7 +14,7 @@ type Body struct {
 	baseElement
 }
 
-func NewBody(widgetGenerators ...func(c *cui.ConsoleUI) types.Widget) func(c *cui.ConsoleUI) types.Widget {
+func NewBody(widgetGenerators ...WidgetGenerator) WidgetGenerator {
 	return func(c *cui.ConsoleUI) types.Widget {
 		b := &Body{
 			baseElement: *newBaseElement(c, nil, widgetGenerators...),
@@ -29,7 +30,12 @@ func (b *Body) Render(msg types.Message) {
 	x, y := b.X(), b.Y()
 	w, h := terminal.GetTerminalSize()
 
-	switch b.GetOption("signal").(os.Signal) {
+	signal, ok := b.GetOption("signal").(os.Signal)
+	if !ok {
+		b.SendError(fmt.Errorf("BODY: signal not of type %T", signal))
+		return
+	}
+	switch signal {
 	case syscall.SIGWINCH:
 		b.SetOption("w", w)
 		b.SetOption("h", h)

@@ -12,12 +12,14 @@ type Div struct {
 	text string
 }
 
-func NewDiv(text string) func(c *cui.ConsoleUI) types.Widget {
+func NewDiv(text string) WidgetGenerator {
 	return func(c *cui.ConsoleUI) types.Widget {
-		return &Div{
+		d := &Div{
 			baseElement: *newBaseElement(c, nil),
 			text:        text,
 		}
+		c.SubscribeWidget(types.ResizeChan, d)
+		return d
 	}
 }
 

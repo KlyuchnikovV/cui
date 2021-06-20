@@ -4,8 +4,6 @@ import (
 	"os"
 )
 
-// type WidgetGenerator func(*cui.ConsoleUI) Widget
-
 type Widget interface {
 	Render(Message)
 	SetOption(string, interface{})
@@ -21,6 +19,21 @@ type Widget interface {
 	W() int
 	H() int
 }
+
+type ChanEnum interface {
+	getValue() int
+}
+
+type chanEnum int
+
+func (c chanEnum) getValue() int {
+	return int(c)
+}
+
+const (
+	ResizeChan chanEnum = iota
+	KeyboardChan
+)
 
 type ConsoleStream interface {
 	getConsoleStream() ConsoleStream

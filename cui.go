@@ -14,7 +14,7 @@ type ConsoleUI struct {
 	body types.Widget
 }
 
-func New(ctx context.Context, enableRaw bool, widgets map[server.ChanEnum][]types.Widget) *ConsoleUI {
+func New(ctx context.Context, enableRaw bool, widgets map[types.ChanEnum][]types.Widget) *ConsoleUI {
 	if enableRaw {
 		log.Print("entering raw")
 		raw_mode.EnableRawMode()

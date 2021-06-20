@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/KlyuchnikovV/cui"
-	"github.com/KlyuchnikovV/cui/server"
 	"github.com/KlyuchnikovV/cui/types"
 )
 
@@ -25,7 +24,7 @@ func newGridRow(c *cui.ConsoleUI, widgets ...func(*cui.ConsoleUI) types.Widget) 
 
 type GridWidgetLayout [][]func(*cui.ConsoleUI) types.Widget
 
-func NewGrid(widgets GridWidgetLayout) func(c *cui.ConsoleUI) types.Widget {
+func NewGrid(widgets GridWidgetLayout) WidgetGenerator {
 	return func(c *cui.ConsoleUI) types.Widget {
 		var rows = make([]gridRow, len(widgets))
 		for i, row := range widgets {
@@ -35,12 +34,12 @@ func NewGrid(widgets GridWidgetLayout) func(c *cui.ConsoleUI) types.Widget {
 			baseElement: *newBaseElement(c, nil),
 			children:    rows,
 		}
-		c.SubscribeWidget(server.ResizeChan, g)
+		c.SubscribeWidget(types.ResizeChan, g)
 		return g
 	}
 }
 
-func (g *Grid) Render(msg types.Message) {
+func (g *Grid) Rend(msg types.Message) {
 	log.Print("grid: exec")
 	msg.Exec(g)
 
@@ -65,6 +64,25 @@ func (g *Grid) Render(msg types.Message) {
 			}
 			newX := x + i*childH + 1
 			newY := g.Y() + j*childW + 1
+			child.Render(types.NewResizeMsg(&newX, &newY, &childW, &childH))
+		}
+	}
+}
+
+func (g *Grid) Render(msg types.Message) {
+	log.Print("grid: exec")
+	msg.Exec(g)
+
+	childH := g.H() / len(g.children)
+	log.Printf("grid: calc childH: %d", childH)
+
+	for i, row := range g.children {
+		childW := g.W() / len(row)
+		log.Printf("grid: calc i: %d childW: %d", i, childW)
+
+		for j, child := range row {
+			newX := g.X() + i*childH
+			newY := g.Y() + j*childW
 			child.Render(types.NewResizeMsg(&newX, &newY, &childW, &childH))
 		}
 	}

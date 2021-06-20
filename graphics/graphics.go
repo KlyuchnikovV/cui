@@ -89,3 +89,7 @@ func (g *Graphics) DrawRectangle(x, y, width, height int, symbol rune) error {
 	}
 	return nil
 }
+
+func (g *Graphics) DisableWordWrap() {
+	g.PrintAt(0, 0, disableWrap, true)
+}

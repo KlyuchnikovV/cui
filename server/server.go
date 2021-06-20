@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,15 +19,15 @@ type Server struct {
 	cancel  context.CancelFunc
 	ch      chan types.Message
 	input   *termin.Termin
-	Widgets map[ChanEnum][]types.Widget
+	Widgets map[types.ChanEnum][]types.Widget
 
 	types.ErrorChannel
 	*graphics.Graphics
 }
 
-func New(ctx context.Context, widgets map[ChanEnum][]types.Widget) *Server {
+func New(ctx context.Context, widgets map[types.ChanEnum][]types.Widget) *Server {
 	if widgets == nil {
-		widgets = make(map[ChanEnum][]types.Widget)
+		widgets = make(map[types.ChanEnum][]types.Widget)
 	}
 	return &Server{
 		ctx:          ctx,
@@ -38,7 +39,7 @@ func New(ctx context.Context, widgets map[ChanEnum][]types.Widget) *Server {
 	}
 }
 
-func (s *Server) SubscribeWidget(key ChanEnum, widget types.Widget) {
+func (s *Server) SubscribeWidget(key types.ChanEnum, widget types.Widget) {
 	s.Widgets[key] = append(s.Widgets[key], widget)
 }
 
@@ -50,6 +51,7 @@ func (s *Server) StartRendering(async bool) {
 
 	// Listening to keys
 	s.input.StartReading(true)
+	s.DisableWordWrap()
 
 	if async {
 		go s.update()
@@ -76,13 +78,14 @@ func (s *Server) update() {
 		if e := recover(); e != nil {
 			err, ok := e.(error)
 			if !ok {
-			err = fmt.Errorf("%#v", e)
+				err = fmt.Errorf("%#v", e)
 			}
 			s.SendError(err)
+			log.Print(err)
 		}
 	}()
 
-	ch := make(chan os.Signal, 1)
+	ch := make(chan os.Signal, 100)
 	// Listening to window resize
 	signal.Notify(ch, syscall.SIGWINCH)
 
@@ -103,19 +106,19 @@ func (s *Server) update() {
 			}
 
 			w, h := terminal.GetTerminalSize()
-			s.broadcast(types.NewResizeMsg(nil, nil, &w, &h), s.Widgets[ResizeChan]...)
+			s.broadcast(types.NewResizeMsg(nil, nil, &w, &h), s.Widgets[types.ResizeChan]...)
 		case msg, ok := <-s.input.GetChan():
 			if !ok {
 				s.SendError(fmt.Errorf("input channel was unexpectedly closed"))
 				return
 			}
-			s.broadcast(types.NewKeyboardMsg(msg), s.Widgets[KeyboardChan]...)
+			s.broadcast(types.NewKeyboardMsg(msg), s.Widgets[types.KeyboardChan]...)
 		case msg, ok := <-s.ch:
 			if !ok {
 				s.SendError(fmt.Errorf("resize channel was unexpectedly closed"))
 				return
 			}
-			s.broadcast(msg, s.Widgets[ResizeChan]...)
+			s.broadcast(msg, s.Widgets[types.ResizeChan]...)
 		case <-s.ctx.Done():
 			return
 		}

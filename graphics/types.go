@@ -115,3 +115,5 @@ const (
 	ClearLineBeforeCursor clearLineMode = 1 // 1 - clears all from cursors position to the start of line
 	ClearAllLine          clearLineMode = 2 // 2 - clears all line
 )
+
+const disableWrap = "\x01b[?7l"
